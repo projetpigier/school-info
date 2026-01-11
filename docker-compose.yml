@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pigier-school-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - "8080:80"
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=pigier_school
+      - DB_USERNAME=pigier_user
+      - DB_PASSWORD=pigier_password
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - pigier-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: pigier-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: pigier_school
+      MYSQL_USER: pigier_user
+      MYSQL_PASSWORD: pigier_password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - pigier-network
+
+  redis:
+    image: redis:alpine
+    container_name: pigier-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - pigier-network
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: pigier-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - pigier-network
+
+networks:
+  pigier-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+    driver: local
